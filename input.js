@@ -2,6 +2,42 @@ var APP = APP || {};
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
+// document.addEventListener("mousedown", MouseDownHandler);
+// document.addEventListener("mousemove", MouseMouveHandler);
+// document.addEventListener("mouseup", MouseUpHandler);
+
+document.addEventListener("touchstart", TouchStartHandler, false);
+document.addEventListener("touchmove", TouchMoveHandler, false);
+document.addEventListener("touchend", TouchEndHandler, false);
+var TouchStartHandler = function(e) {
+    e.preventDefault();
+    var width = window.innerWidth;
+    console.log("yes");
+    //var height = window.innerHeight;
+    if (e.touches[0].clientX < width/2){
+        APP.leftPressed = true;
+    } else {
+        APP.rightPressed = true;
+    }
+    //APP.mousey = e.touches[0].clientY;
+};
+
+var TouchMoveHandler = function(e) {
+    e.preventDefault();
+    var width = window.innerWidth;
+    //var height = window.innerHeight;
+    if (e.touches[0].clientX < width/2){
+        APP.leftPressed = true;
+    } else {
+        APP.rightPressed = true;
+    }
+};
+
+
+var TouchEndHandler = function(e) {
+    e.preventDefault();
+    if (e.touches.length === 0) resetInputs();
+};
 
 APP.input = function(){
     var res = "n";
@@ -53,6 +89,8 @@ function keyUpHandler(e) {
     }
 }
 
+
+
 // var getSpace = function(){
 //     return APP.spacePressed;
 // };
@@ -62,11 +100,11 @@ function keyUpHandler(e) {
 //         APP.spacePressed;
 // };
 
-// var resetInputs = function() {
-//     APP.upPressed = false;
-//     APP.downPressed = false;
-//     APP.leftPressed = false;
-//     APP.rightPressed = false;
-//     APP.spacePressed = false;
-// };
+var resetInputs = function() {
+    APP.upPressed = false;
+    APP.downPressed = false;
+    APP.leftPressed = false;
+    APP.rightPressed = false;
+    APP.spacePressed = false;
+};
 
