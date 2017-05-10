@@ -12,6 +12,7 @@ document.addEventListener("touchend", TouchEndHandler, false);
 var TouchStartHandler = function(e) {
     e.preventDefault();
     var width = window.innerWidth;
+    console.log("yes");
     //var height = window.innerHeight;
     if (e.touches[0].clientX < width/2){
         APP.leftPressed = true;
