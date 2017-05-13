@@ -63,21 +63,49 @@ var drawFigure = function(square, ctx){
     } else if (square.type === "="){
         colour = "green";
     } else if (square.type === "." ){
-        colour = "white";
+        colour = "#ffe4c4";
     } else {
         colour = "grey";
     }
     ctx.fillStyle = colour;
     ctx.strokeStyle = colour;
-    ctx.beginPath();
-    var width = ctx.canvas.width;
-    ctx.rect((square.points[0] + 1.5)/3 * width,
-             0,
-             (square.points[1]- square.points[0])/3 * width,
-             ctx.canvas.height);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fill();
+    
+    var gap;
+    var side;
+    if (ctx.canvas.width > ctx.canvas.height){
+        gap = ctx.canvas.height/10;
+        side = ctx.canvas.height - 2 * gap;
+        
+        // ctx.fillStyle = "black";
+        // ctx.beginPath();
+        // ctx.rect(ctx.canvas.width/2 - side/2, gap, side, side);
+        // ctx.fill();
+        // ctx.beginPath();
+        // //
+        ctx.beginPath();
+        ctx.rect(ctx.canvas.width/2 - side/2 + (square.points[0] + 1.5)/3 * side,
+                 gap + side/2 - side/18,
+                 (square.points[1]- square.points[0])/3 * side,
+                 (1)/9 * side);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+    } else{
+        // gap = ctx.canvas.width/10;
+        // side = ctx.canvas.width - 2 * gap;
+        // ctx.beginPath();
+        // ctx.rect(gap, ctx.canvas.height/2 - side/2, side, side);
+        // ctx.fill();
+    }
+    // ctx.beginPath();
+    // var width = ctx.canvas.width;
+    // ctx.rect((square.points[0] + 1.5)/3 * width,
+    //          0,
+    //          (square.points[1]- square.points[0])/3 * width,
+    //          ctx.canvas.height);
+    // ctx.closePath();
+    // ctx.stroke();
+    // ctx.fill();
 };
 
 var drawCircle = function(ctx){
@@ -88,20 +116,68 @@ var drawCircle = function(ctx){
 };
 
 var drawBackground = function(ctx){
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "#ffe4c4";
     ctx.beginPath();
     ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fill();
 };
 
 var drawForeground = function(ctx){
+    var gap;
+    var side;
+    if (ctx.canvas.width > ctx.canvas.height){
+        gap = ctx.canvas.height/10;
+        side = ctx.canvas.height - 2 * gap;
+        ctx.fillStyle = "#ffe4c4";
+        ctx.beginPath();
+        ctx.rect(0, 0, ctx.canvas.width, gap);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.rect(0, ctx.canvas.height - gap, ctx.canvas.width, gap);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.rect(0, 0, ctx.canvas.width/2 - side/2, ctx.canvas.height);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.rect(ctx.canvas.width/2 + side/2 , 0, ctx.canvas.width/2 - side/2, ctx.canvas.height);
+        ctx.closePath();
+        ctx.fill();
+        
+    } else {
+        
+    }
+    // ctx.fillStyle = "#ffe4c4";
+    // ctx.beginPath();
+    // ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height/3);
+    // ctx.fill();
+    // ctx.beginPath();
+    // ctx.rect(0, ctx.canvas.height*2/3, ctx.canvas.width, ctx.canvas.height/3);
+    // ctx.fill();
+};
+
+var drawPlane = function(ctx){
+    var gap;
+    var side;
     ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height/3);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.rect(0, ctx.canvas.height*2/3, ctx.canvas.width, ctx.canvas.height/3);
-    ctx.fill();
+    if (ctx.canvas.width > ctx.canvas.height){
+        gap = ctx.canvas.height/10;
+        side = ctx.canvas.height - 2 * gap;
+        
+        
+        ctx.beginPath();
+        ctx.rect(ctx.canvas.width/2 - side/2, gap, side, side);
+        ctx.closePath();
+        ctx.fill();
+    } else{
+        gap = ctx.canvas.width/10;
+        side = ctx.canvas.width - 2 * gap;
+        ctx.beginPath();
+        ctx.rect(gap, ctx.canvas.height/2 - side/2, side, side);
+        ctx.fill();
+    }
 };
 
 APP.output = function(state, ctx){
@@ -110,15 +186,16 @@ APP.output = function(state, ctx){
                                   state.x,
                                   state.y,
                                   state.angle);
+    drawPlane(ctx);
     for (var i = 0; i < squares.length; i++){
         drawFigure(squares[i], ctx);
     }
+    
+    
     drawForeground(ctx);
     drawCircle(ctx);
     ctx.font = "50px Arial";
     ctx.fillStyle = "Blue";
     ctx.textAlign = "left";
     ctx.fillText(String(state.level + 1), 50, 50); 
-    console.log("number of squares:");
-    console.log(squares.length);
 };
