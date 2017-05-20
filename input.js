@@ -1,40 +1,63 @@
 var APP = APP || {};
 
-document.addEventListener("keydown", keyDownHandler, false);
-document.addEventListener("keyup", keyUpHandler, false);
-// document.addEventListener("mousedown", MouseDownHandler);
-// document.addEventListener("mousemove", MouseMouveHandler);
-// document.addEventListener("mouseup", MouseUpHandler);
+var mouseDownHandler = function(e){
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    if (e.clientX < width/2 && e.clientY > height/3 && e.clientY < 2 *height/3){
+        APP.leftPressed = true;
+    } else if (e.clientY > height/3 && e.clientY < 2 *height/3){
+        APP.rightPressed = true;
+    } else if (e.clientY < height/3){
+        APP.upPressed = true;
+    } else {
+        APP.downPressed = true;
+    }
+};
 
-document.addEventListener("touchstart", TouchStartHandler, false);
-document.addEventListener("touchmove", TouchMoveHandler, false);
-document.addEventListener("touchend", TouchEndHandler, false);
-var TouchStartHandler = function(e) {
+var mouseMoveHandler = function(e){
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    if (e.clientX < width/2 && e.clientY > height/3 && e.clientY < height/3){
+        //APP.leftPressed = true;
+    } else {
+        //APP.rightPressed = true;
+    }
+};
+
+var mouseUpHandler = function(e){
+    resetInputs();
+};
+
+var touchStartHandler = function(e) {
     e.preventDefault();
     var width = window.innerWidth;
-    console.log("yes");
-    //var height = window.innerHeight;
-    if (e.touches[0].clientX < width/2){
+    var height = window.innerHeight;
+    var t = e.touches[0];
+    if (t.clientX < width/2 && t.clientY > height/3 && t.clientY < 2 *height/3){
         APP.leftPressed = true;
-    } else {
+    } else if (t.clientY > height/3 && t.clientY < 2 *height/3){
         APP.rightPressed = true;
+    } else if (t.clientY < height/3){
+        APP.upPressed = true;
+    } else {
+        APP.downPressed = true;
     }
     //APP.mousey = e.touches[0].clientY;
 };
 
-var TouchMoveHandler = function(e) {
+var touchMoveHandler = function(e) {
     e.preventDefault();
-    var width = window.innerWidth;
-    //var height = window.innerHeight;
-    if (e.touches[0].clientX < width/2){
-        APP.leftPressed = true;
-    } else {
-        APP.rightPressed = true;
-    }
+    // var width = window.innerWidth;
+    // //var height = window.innerHeight;
+    // if (e.touches[0].clientX < width/2){
+    //     APP.leftPressed = true;
+    // } else {
+    //     APP.rightPressed = true;
+    // }
 };
 
 
-var TouchEndHandler = function(e) {
+var touchEndHandler = function(e) {
     e.preventDefault();
     if (e.touches.length === 0) resetInputs();
 };
@@ -53,52 +76,83 @@ APP.input = function(){
     return res;
 };
 
-function keyDownHandler(e) {
-	if (e.keyCode == 40) {
-		APP.downPressed = true;
-	}
-    if(e.keyCode == 39) {
+var keyDownHandler = function(e) {
+	var map = {
+        38: 0, // Up
+        39: 1, // Right
+        40: 2, // Down
+        37: 3, // Left
+        75: 0, // Vim up
+        76: 1, // Vim right
+        74: 2, // Vim down
+        72: 3, // Vim left
+        87: 0, // W
+        68: 1, // D
+        83: 2, // S
+        65: 3  // A
+    };
+    var mapped = map[e.keyCode];
+    if (mapped === 0){
+        APP.upPressed = true;
+    } else if (mapped === 1){
         APP.rightPressed = true;
-    }
-	else if (e.keyCode == 38) {
-		APP.upPressed = true;
-	}
-    else if(e.keyCode == 37) {
+    } else if (mapped === 2){
+        APP.downPressed = true;
+    } else if (mapped === 3){
         APP.leftPressed = true;
     }
-    if (e.keyCode == 32){
-        APP.spacePressed = true;
-    }
-}
+};
 
-function keyUpHandler(e) {
-    if (e.keyCode == 40) {
-		APP.downPressed = false;
-	}
-    if(e.keyCode == 39) {
+var keyUpHandler = function(e) {
+    var map = {
+        38: 0, // Up
+        39: 1, // Right
+        40: 2, // Down
+        37: 3, // Left
+        75: 0, // Vim up
+        76: 1, // Vim right
+        74: 2, // Vim down
+        72: 3, // Vim left
+        87: 0, // W
+        68: 1, // D
+        83: 2, // S
+        65: 3  // A
+    };
+    var mapped = map[e.keyCode];
+    if (mapped === 0){
+        APP.upPressed = false;
+    } else if (mapped === 1){
         APP.rightPressed = false;
-    }
-	else if (e.keyCode == 38) {
-		APP.upPressed = false;
-	}
-    else if(e.keyCode == 37) {
+    } else if (mapped === 2){
+        APP.downPressed = false;
+    } else if (mapped === 3){
         APP.leftPressed = false;
     }
-    if (e.keyCode == 32){
-        APP.spacePressed = false;
-    }
-}
+//     if (e.keyCode == 40) {
+// 		APP.downPressed = false;
+// 	}
+//     if(e.keyCode == 39) {
+//         APP.rightPressed = false;
+//     }
+// 	else if (e.keyCode == 38) {
+// 		APP.upPressed = false;
+// 	}
+//     else if(e.keyCode == 37) {
+//         APP.leftPressed = false;
+//     }
+//     if (e.keyCode == 32){
+//         APP.spacePressed = false;
+//     }
+};
 
-
-
-// var getSpace = function(){
-//     return APP.spacePressed;
-// };
-
-// var isInput = function(){
-//     return APP.upPressed || APP.downPressed || APP.leftPressed || APP.rightPressed ||
-//         APP.spacePressed;
-// };
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("mousedown", mouseDownHandler);
+document.addEventListener("mousemove", mouseMoveHandler);
+document.addEventListener("mouseup", mouseUpHandler);
+document.addEventListener("touchstart", touchStartHandler, false);
+document.addEventListener("touchmove", touchMoveHandler, false);
+document.addEventListener("touchend", touchEndHandler, false);
 
 var resetInputs = function() {
     APP.upPressed = false;
