@@ -28,4 +28,6 @@ The state contains the following properties:
 -maps: the array containing all the level blocks (array containing maps)
 -x: the x position of the player
 -y: the y position of the player
--angle: the angle the player is facing, it points towards the positive x axis
+-z: the z position of the player
+-u: the vector describing where the player is going
+-v: the vector that describes, together with u, the plane where the player lies

@@ -1,42 +1,100 @@
 var APP = APP || {};
+var CONFIG = CONFIG || {};
 
-APP.update = function(state, input){
-    var axis;
+APP.update = function(state, dt, input){
     if (state.level < 0){
-        return newState(1);
-    } else {
-        if (input === "l"){
-            state.u = rotate(state.u, state.v, -Math.PI/128);
-        } else if (input === "r"){
-            state.u = rotate(state.u, state.v, Math.PI/128);
-        } else if (input === "u"){
-            axis = cross(state.u, state.v);
-            state.u = rotate(state.u, axis, -Math.PI/128);
-            state.v = rotate(state.v, axis, -Math.PI/128);
+        return newState(1, 0, state.maps);
+    } else if (state.status === "alive") {
+        if (state.level == state.maps.length){
+            state.status = "won";
+            return state;
+        }
+        var axis;
+        if (input === "u"){
+            state.rotx += 0.005*dt;
+            if (state.rotx > 1) {
+                state.rotx = 1;
+            }
+            state.u = rotate(state.u, state.v, -Math.PI/2048 * dt * state.rotx);
         } else if (input === "d"){
+            state.rotx += 0.005*dt;
+            if (state.rotx > 1) {
+                state.rotx = 1;
+            }
+            state.u = rotate(state.u, state.v, Math.PI/2048 * dt * state.rotx);
+        } else if (input === "l"){
+            state.roty += 0.005*dt;
+            if (state.roty > 1) {
+                state.roty = 1;
+            }
             axis = cross(state.u, state.v);
-            state.u = rotate(state.u, axis, Math.PI/128);
-            state.v = rotate(state.v, axis, Math.PI/128);
+            state.u = rotate(state.u, axis, -Math.PI/2048 * dt * state.roty);
+            state.v = rotate(state.v, axis, -Math.PI/2048 * dt * state.roty);
+        } else if (input === "r"){
+            state.roty += 0.005*dt;
+            if (state.roty > 1) {
+                state.roty = 1;
+            }
+            axis = cross(state.u, state.v);
+            state.u = rotate(state.u, axis, Math.PI/2048 * dt * state.roty);
+            state.v = rotate(state.v, axis, Math.PI/2048 * dt * state.roty);
+        } else {
+            state.rotx *= 0;
+            state.roty *= 0;
         }
-        //console.log(state.u.x * state.u.x + state.u.y * state.u.y + state.u.z *state.u.z);
-        state.x += state.u.x * 0.01;
-        state.y += state.u.y * 0.01;
-        state.z += state.u.z * 0.01;
-    } 
-    var current;
-    if (state.x > 0 && state.x < state.maps[state.level-1].length &&
-        state.y > 0 && state.y < state.maps[state.level-1][0].length &&
-        state.z > 0 && state.z < state.maps[state.level-1][0][0].length){
-        current = state.maps[state.level-1][Math.floor(state.x)][Math.floor(state.y)][Math.floor(state.z)];
-        if (current === "#"){
-            return newState(state.level);
-        } else if (current === "="){
-            return newState(state.level + 1);
+        
+        if (CONFIG.speed * dt < CONFIG.distance_to_death_by_lag) {
+            state.pos.x += state.u.x * CONFIG.speed * dt;
+            state.pos.y += state.u.y * CONFIG.speed * dt;
+            state.pos.z += state.u.z * CONFIG.speed * dt;
         }
-    } else {
-        return newState(state.level);
+        
+        
+        
+        var current;
+        if (state.pos.x > 0 && state.pos.x < state.maps[state.level-1].length &&
+            state.pos.y > 0 && state.pos.y < state.maps[state.level-1][0].length &&
+            state.pos.z > 0 && state.pos.z < state.maps[state.level-1][0][0].length){
+            var floorX = Math.floor(state.pos.x);
+            var floorY = Math.floor(state.pos.y);
+            var floorZ = Math.floor(state.pos.z);
+            current = state.maps[state.level-1][floorX][floorY][floorZ];
+            if (current === "#"){
+                state.status = "dying";
+                return state;
+                //return newState(state.level, state.deaths + 1, state.maps);
+            } else if (current === "="){
+                state.status = "passed";
+                return state;
+            }
+        } else {
+            state.status = "dying";
+            return state;
+        }
+        return state;
+    } else if (state.status === "dying"){
+        state.counter += dt;
+        axis = cross(state.u, state.v);
+        state.u = rotate(state.u, axis, -Math.PI/20000 * state.counter);
+        state.v = rotate(state.v, axis, -Math.PI/20000 * state.counter);
+        if (state.counter > 2000){
+            return newState(state.level, state.deaths + 1, state.maps);
+        }
+        return state;
+    } else if (state.status === "passed") {
+        state.counter += dt;
+        state.u = rotate(state.u, state.v, -Math.PI/20000 * state.counter);
+        if (state.counter > 2000){
+            return newState(state.level + 1, state.deaths, state.maps);
+        }
+        return state;
+    } else if (state.status === "won") {
+        state.u = rotate(state.u, state.v, -Math.PI/2048 * dt);
+        axis = cross(state.u, state.v);
+        state.u = rotate(state.u, axis, -Math.PI/2048 * dt);
+        state.v = rotate(state.v, axis, -Math.PI/2048 * dt);
+        return state;
     }
-    return state;
 };
 
 var cross = function(v1, v2){
@@ -62,534 +120,29 @@ var rotate = function(vec, axis, angle){
     };
 };
 
-var strMaps = [//1
-              "...|" + 
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" + 
-              "@.=|" + 
-              "...|" + 
-              "-" +
-              "...|" +
-              "...|" +
-              "...|" + 
-              "-",
-              //2
-              "...|" +
-              "..=|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //3
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "..=|" + 
-              "...|" +
-              "-",
-              //4
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "..=|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //5
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "..=|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //6
-              "..=|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //7
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "..=|" +
-              "-",
-              //8
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "##=|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //9
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "##=|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //10
-              "...|" +
-              "##=|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //11
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "##=|" + 
-              "...|" +
-              "-",
-              //12
-              "##=|" +
-              "..#|" + 
-              "..#|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-",
-              //13
-              "...|" +
-              "...|" + 
-              "...|" +
-              "-" +
-              "...|" +
-              "@..|" + 
-              "...|" +
-              "-" +
-              "##=|" +
-              "..#|" + 
-              "..#|" +
-              "-",
-              //14
-              ".......|" +
-              ".......|" + 
-              ".......|" +
-              "-" +
-              ".......|" +
-              "@..#..=|" + 
-              ".......|" +
-              "-" +
-              ".......|" +
-              ".......|" + 
-              ".......|" +
-              "-",
-              //15
-              
-              //16
-              "@....=|" +
-              "-",
-              //17
-              "###=|" +
-              "@...|" +
-              "-",
-              //18
-              "@...|" +
-              "###=|" +
-              "-",
-              //19
-              "##=|" +
-              "##.|" +
-              "@..|" + 
-              "-",
-              //20
-              "@..|" +
-              "##.|" +
-              "##=|" + 
-              "-",
-              //21
-              "##=|" +
-              "-" +
-              "@..|" +
-              "-",
-              //22
-              "@..|" +
-              "-" +
-              "##=|" +
-              "-",
-              //23
-              "##=|" + 
-              "-" +
-              "##.|" + 
-              "-" +
-              "@..|" + 
-              "-",
-              //23
-              "@..#|" +
-              "##.#|" +
-              "##.=|" +
-              "-",
-              //24
-              "##.=|" +
-              "##.#|" +
-              "@..#|" +
-              "-",
-              //25
-              "##.=|" +
-              "##.#|" +
-              "@..#|" +
-              "-",
-              //26
-              "@..#|" +
-              "-" +
-              "##.#|" +
-              "-" +
-              "##.=|" +
-              "-",
-              //27
-              "##.=|" +
-              "-" +
-              "##.#|" +
-              "-" +
-              "@..#|" +
-              "-",
-              //28
-              "####=|" +
-              "-" +
-              "####.|" +
-              "-" +
-              "##...|" +
-              "-" +
-              "##.##|" +
-              "-" +
-              "@..##|" +
-              "-",
-              //29
-              ".......|" +
-              "...#...|" + 
-              ".......|" +
-              "-" +
-              "...#...|" +
-              "@..#..=|" + 
-              "...#...|" +
-              "-" +
-              ".......|" +
-              "...#...|" + 
-              ".......|" +
-              "-",
-              //30
-              "@....|" +
-              "####.|" + 
-              "####.|" +
-              "####.|" +
-              "-" +
-              "#####|" +
-              "#####|" + 
-              "#####|" + 
-              "####.|" +
-              "-" +
-              "#####|" +
-              "#####|" +
-              "#####|" + 
-              "####.|" +
-              "-" +
-              "#####|" +
-              "#####|" + 
-              "#####|" + 
-              "####=|" +
-              "-",
-              //31
-              "##...|" +
-              "####.|" + 
-              "##...|" +
-              "-" +
-              "##.##|" +
-              "#####|" + 
-              "##.##|" +
-              "-" +
-              "##=##|" +
-              "#####|" + 
-              "@..##|" +
-              "-",
-              //32
-              ".#...|" +
-              ".#.#.|" + 
-              "...#.|" +
-              "-" +
-              ".####|" +
-              "#####|" + 
-              "####.|" +
-              "-" +
-              "=#...|" +
-              "##.#.|" + 
-              "@..#.|" +
-              "-",
-              //33
-              "##...|" +
-              "####.|" + 
-              "####.|" +
-              "#####|" +
-              "#####|" +
-              "-" +
-              "##.##|" +
-              "#####|" + 
-              "####.|" +
-              "#####|" +
-              "#####|" +
-              "-" +
-              "##.##|" +
-              "#####|" + 
-              "=#@..|" +
-              ".####|" +
-              ".....|" +
-              "-" +
-              "##.##|" +
-              "#####|" + 
-              "#####|" +
-              "#####|" +
-              "####.|" +
-              "-" +
-              "...##|" +
-              ".####|" + 
-              ".####|" +
-              ".####|" +
-              ".....|" +
-              "-"
-              ];
-              //3];
-            //   //2
-            //   "#######|" +
-            //   "#....=#|" +
-            //   "#@....#|" +
-            //   "#.....#|" +
-            //   "#######|",
-            //   //3
-            //   "#######|" +
-            //   "#.....#|" +
-            //   "#@....#|" +
-            //   "#....=#|" +
-            //   "#######|",
-            //   //4
-            //   "########|" +
-            //   "#......#|" +
-            //   "#@..#.=#|" +
-            //   "#......#|" +
-            //   "########|",
-            //   //5
-            //   "#######|" +
-            //   "#@....#|" +
-            //   "#####=#|" +
-            //   "#######|",
-            //   //6
-            //   "######|" +
-            //   "####=#|" +
-            //   "####.#|" +
-            //   "#@...#|" +
-            //   "######|",
-            //   //7
-            //   "########|" +
-            //   "#@.....#|" +
-            //   "######.#|" +
-            //   "######.#|" +
-            //   "######=#|" +
-            //   "########",
-            //   //8
-            //   "#######|" +
-            //   "###...#|" +
-            //   "#@..#=#|" +
-            //   "#######|",
-            //   //9
-            //   "#######|" +
-            //   "#@..#=#|" +
-            //   "###...#|" +
-            //   "#######|",
-            //   //10
-            //   "#####|" +
-            //   "#@..#|" +
-            //   "###.#|" +
-            //   "#=..#|" +
-            //   "#####|",
-            //   //11
-            //   "######|" +
-            //   "#....#|" +
-            //   "#.##.#|" +
-            //   "#=#@.#|" +
-            //   "######|",
-            //   //12
-            //   "#######|" +
-            //   "###...#|" +
-            //   "#=@.#.#|" +
-            //   "###...#|" +
-            //   "#######|",
-            //   //13
-            //   "#####|" +
-            //   "#..=#|" +
-            //   "#.###|" +
-            //   "#...#|" +
-            //   "###.#|" +
-            //   "#@..#|" +
-            //   "#####|",
-            //   //14
-            //   "######|" +
-            //   "##=#.#|" +
-            //   "##.#.#|" +
-            //   "#@...#|" +
-            //   "######|",
-            //   //15
-            //   "###########|" +
-            //   "###.....###|" +
-            //   "###.#...###|" +
-            //   "###.#=..###|" +
-            //   "###.###.###|" +
-            //   "#@......###|" +
-            //   "###########|",
-            //   //16
-            //   "###########|" +
-            //   "#######..=#|" +
-            //   "#######.#.#|" +
-            //   "###.......#|" +
-            //   "###.#.#.###|" +
-            //   "###.....###|" +
-            //   "###.#.#.###|" +
-            //   "#@......###|" +
-            //   "###########|",
-            //   //17
-            //   "#########|" +
-            //   "#...#####|" +
-            //   "#.#.#####|" +
-            //   "#.......#|" +
-            //   "#######.#|" +
-            //   "#=@.....#|" +
-            //   "#########|",
-            //   //18
-            //   "#######|" +
-            //   "#.....#|" +
-            //   "#.###.#|" +
-            //   "#.#@..#|" +
-            //   "#.#####|" +
-            //   "#....=#|" +
-            //   "#######|",
-            //   //19
-            //   "#######|" +
-            //   "#.....#|" +
-            //   "#.###.#|" +
-            //   "#..=#.#|" +
-            //   "#.###.#|" +
-            //   "#@....#|" +
-            //   "#######|",
-            //   //20
-            //   "###########|" +
-            //   "#.......#=#|" +
-            //   "#.#####.#.#|" +
-            //   "#.#...#...#|" +
-            //   "#...#.#####|" +
-            //   "#####.....#|" +
-            //   "#@..###.#.#|" +
-            //   "###.......#|" +
-            //   "###########|"];
-
-
-var strToMap = function(strMap){
-    var row = [];
-    var plane = [];
-    var res = [];
-    for(var i = 0; i < strMap.length; i++){
-        if (strMap.charAt(i) === "|"){
-            plane.push(row);
-            row = [];
-        } else if (strMap.charAt(i) === "-"){
-            res.push(plane);
-            plane = [];
-        } else{
-            row.push(strMap.charAt(i));
-        }
-    }
-    return res;
-};
-
-var maps = [];
-
 var coords = function(map){
     for (var i = 0; i < map.length; i++){
         for (var j = 0; j < map[i].length; j++){
             for (var k = 0; k < map[i][j].length; k++){
                 if (map[i][j][k] === "@"){
-                    return {x: i+ 0.5, y: j + 0.5, z: k + 0.5};
+                    return {x: i+ 0.5, y: j + 0.5, z: k + 0.01};
                 }
             }
         }
     }
 };
 
-
-for (var i = 0; i < strMaps.length; i++){
-    maps.push(strToMap(strMaps[i]));
-}
-
-var newState = function(level){
+var newState = function(level, deaths, maps){
     var pos = coords(maps[level-1]);
-    return {level:level,
+    return {status:"alive",
+            counter:0,
+            level:level,
+            deaths:deaths,
+            alive:true,
             maps:maps,
+            pos:pos,
+            rotx:0,
+            roty:0,
             x:pos.x,
             y:pos.y,
             z:pos.z,

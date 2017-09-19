@@ -1,66 +1,5 @@
 var APP = APP || {};
-
-var mouseDownHandler = function(e){
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    if (e.clientX < width/2 && e.clientY > height/3 && e.clientY < 2 *height/3){
-        APP.leftPressed = true;
-    } else if (e.clientY > height/3 && e.clientY < 2 *height/3){
-        APP.rightPressed = true;
-    } else if (e.clientY < height/3){
-        APP.upPressed = true;
-    } else {
-        APP.downPressed = true;
-    }
-};
-
-var mouseMoveHandler = function(e){
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    if (e.clientX < width/2 && e.clientY > height/3 && e.clientY < height/3){
-        //APP.leftPressed = true;
-    } else {
-        //APP.rightPressed = true;
-    }
-};
-
-var mouseUpHandler = function(e){
-    resetInputs();
-};
-
-var touchStartHandler = function(e) {
-    e.preventDefault();
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    var t = e.touches[0];
-    if (t.clientX < width/2 && t.clientY > height/3 && t.clientY < 2 *height/3){
-        APP.leftPressed = true;
-    } else if (t.clientY > height/3 && t.clientY < 2 *height/3){
-        APP.rightPressed = true;
-    } else if (t.clientY < height/3){
-        APP.upPressed = true;
-    } else {
-        APP.downPressed = true;
-    }
-    //APP.mousey = e.touches[0].clientY;
-};
-
-var touchMoveHandler = function(e) {
-    e.preventDefault();
-    // var width = window.innerWidth;
-    // //var height = window.innerHeight;
-    // if (e.touches[0].clientX < width/2){
-    //     APP.leftPressed = true;
-    // } else {
-    //     APP.rightPressed = true;
-    // }
-};
-
-
-var touchEndHandler = function(e) {
-    e.preventDefault();
-    if (e.touches.length === 0) resetInputs();
-};
+var CONFIG = CONFIG || {};
 
 APP.input = function(){
     var res = "n";
@@ -74,6 +13,103 @@ APP.input = function(){
         res = "r";
     }
     return res;
+};
+
+function coordToMove(x, y){
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    var gap; 
+    var side;
+    resetInputs();
+    APP.click = true;
+    
+    // new region testing
+    if (true){
+        //out of screen
+        if (x < 0 || y < 0 || x > width || y > height){
+            APP.click = false;
+        }
+        //up
+        if (x/ width > y/height && x/ width < 1- y/height){
+            APP.upPressed = true;
+        }
+        //down
+        if (x/ width < y/height && x/ width > 1- y/height){
+            APP.downPressed = true;
+        }
+        //left
+        if (x/ width < y/height && 1- x/ width > y/height){
+            APP.leftPressed = true;
+        }
+        //right
+        else {
+            APP.rightPressed = true;
+        }
+        
+    } else {
+        if (width > height){
+            gap = height * CONFIG.gap_ratio;
+            side = height - 2 * gap;
+            if (y < gap){
+                APP.upPressed = true;
+            } else if (y > height - gap) {
+                APP.downPressed = true;
+            } else if (x < width/2 - side/2) {
+                APP.leftPressed = true;
+            } else if (x > width/2 + side/2){
+                APP.rightPressed = true;
+            }
+        } else {
+            gap = width * CONFIG.gap_ratio;
+            side = width - 2 * gap;
+            if (y < height/2 - side/2){
+                APP.upPressed = true;
+            } else if (y > height/2 + side/2) {
+                APP.downPressed = true;
+            } else if (x < gap){
+                APP.leftPressed = true;
+            } else if (x > width - gap){
+                APP.rightPressed = true;
+            }
+        }
+    }
+}
+
+
+var mouseDownHandler = function(e){
+    coordToMove(e.clientX, e.clientY);
+    APP.click = true;
+};
+
+var mouseMoveHandler = function(e){
+    if (APP.click){
+        coordToMove(e.clientX, e.clientY);
+    }
+};
+
+var mouseUpHandler = function(e){
+    resetInputs();
+    APP.click = false;
+};
+
+var touchStartHandler = function(e) {
+    e.preventDefault();
+    var last = e.touches.length - 1;
+    coordToMove(e.touches[last].clientX, e.touches[last].clientY);
+};
+
+var touchMoveHandler = function(e) {
+    e.preventDefault();
+    var last = e.touches.length - 1;
+    if (APP.click){
+        coordToMove(e.touches[last].clientX, e.touches[last].clientY);
+    }
+};
+
+
+var touchEndHandler = function(e) {
+    e.preventDefault();
+    if (e.touches.length === 0) resetInputs();
 };
 
 var keyDownHandler = function(e) {
@@ -91,6 +127,7 @@ var keyDownHandler = function(e) {
         83: 2, // S
         65: 3  // A
     };
+    resetInputs();
     var mapped = map[e.keyCode];
     if (mapped === 0){
         APP.upPressed = true;
@@ -128,21 +165,6 @@ var keyUpHandler = function(e) {
     } else if (mapped === 3){
         APP.leftPressed = false;
     }
-//     if (e.keyCode == 40) {
-// 		APP.downPressed = false;
-// 	}
-//     if(e.keyCode == 39) {
-//         APP.rightPressed = false;
-//     }
-// 	else if (e.keyCode == 38) {
-// 		APP.upPressed = false;
-// 	}
-//     else if(e.keyCode == 37) {
-//         APP.leftPressed = false;
-//     }
-//     if (e.keyCode == 32){
-//         APP.spacePressed = false;
-//     }
 };
 
 document.addEventListener("keydown", keyDownHandler, false);
@@ -160,5 +182,6 @@ var resetInputs = function() {
     APP.leftPressed = false;
     APP.rightPressed = false;
     APP.spacePressed = false;
+    APP.click = false;
 };
 
