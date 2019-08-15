@@ -10,14 +10,14 @@ The file `input.js` is designed to keep track of all the keyboard and swipe inpu
 final input can be called at `APP.input()` and it will return the direction "l" or
 "r"
 
-output.js is designed to get some values of the current state of the game and
+The file `output.js` is designed to get some values of the current state of the game and
 draw the screen by calling `APP.output()` and giving the needed values.
 
-update.js is designed to get the past state and some input and update the state.
-The new state is returned by calling APP.update() and passing in the past state
-and the input from input.js
+The file `update.js` is designed to get the past state and some input and update the state.
+The new state is returned by calling `APP.update()` and passing in the past state
+and the input from `input.js`.
 
-The design philosophy is that input.js, output.js and update.js are do not
+The design philosophy is that `input.js`, `output.js` and `update.js` do not
 depend on each other, and as such, so not call each other.
 
 The file `main.js` brings only the methods `APP.input()`, `APP.output()` and `APP.update()`
