@@ -1,3 +1,10 @@
+# Flip
+## Description
+A player is stuck in a 3D maze but can only see a 2D cross section of it.
+The player must rotate the plane in order to find the exit.
+A demo can be found [here](https://diegolopez.me/flip). 
+
+## Code Organization
 The code is designed to be as independent from the other parts as possible
 
 input.js is designed to keep track of all the keyboard and swipe input, and the
